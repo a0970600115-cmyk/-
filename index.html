@@ -1,81 +1,14 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <base target="_top">
+<head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <style>
-      .card-hover:hover { transform: translateY(-5px); transition: 0.3s; cursor: pointer; border-width: 2px; }
-      body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; }
-    </style>
-  </head>
-  <body class="py-5">
-    <div class="container text-center">
-      <h1 class="display-4 fw-bold mb-5 text-dark">✨ 學生社團門戶系統</h1>
-      
-      <div class="alert alert-info shadow-sm mb-5">
-        請點選下方選項進入系統 (系統將跳轉至 Google 安全環境)
-      </div>
-
-      <div class="row g-4 justify-content-center">
-        <div class="col-md-5">
-          <div class="card h-100 shadow card-hover border-primary" onclick="navTo('About')">
-            <div class="card-body p-4">
-              <div class="display-4 mb-2">🔍</div>
-              <h3 class="card-title">社團介紹</h3>
-              <p class="card-text text-muted">探索 7 大特色社團。</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-5">
-          <div class="card h-100 shadow card-hover border-success" onclick="navTo('Form')">
-            <div class="card-body p-4">
-              <div class="display-4 mb-2">📝</div>
-              <h3 class="card-title">我要報名</h3>
-              <p class="card-text text-muted">填寫資訊，加入心儀社團。</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-5">
-          <div class="card h-100 shadow card-hover border-info" onclick="navTo('Status')">
-            <div class="card-body p-4">
-              <div class="display-4 mb-2">📊</div>
-              <h3 class="card-title">申請狀況查詢</h3>
-              <p class="card-text text-muted">查看最新錄取名單與審核進度。</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-5">
-          <div class="card h-100 shadow card-hover border-danger" onclick="navTo('Admin')">
-            <div class="card-body p-4">
-              <div class="display-4 mb-2">⚙️</div>
-              <h3 class="card-title">管理員後台</h3>
-              <p class="card-text text-muted">限幹部進入，進行名單審核。</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
+    <title>進入社團系統</title>
+</head>
+<body>
     <script>
-      // 【重要】請將下方網址替換為您在 Apps Script「管理部署」中取得的 Web App 網址
-      const GAS_URL = "https://script.google.com/macros/s/AKfycbxnbhW30jA4dc1Y2dZtqEK53L7v388ljwFKOjxqj19sn1WUcNUwC3g6x8v-EPPAf9U/exec";
-
-      function navTo(page) {
-        if (page === 'Admin') {
-          const password = prompt("請輸入管理員密碼：");
-          if (password !== "sss555") {
-            alert("密碼錯誤，拒絕進入！");
-            return;
-          }
-        }
-        
-        // 在 GitHub 環境下，直接使用 window.location 進行跳轉並帶入參數
-        window.location.href = GAS_URL + "?page=" + page;
-      }
+        // 這裡請務必貼上你在 Google Apps Script 取得的 Web App 網址 (以 /exec 結尾)
+        window.location.href = "https://script.google.com/macros/s/AKfycbxnbhW30jA4dc1Y2dZtqEK53L7v388ljwFKOjxqj19sn1WUcNUwC3g6x8v-EPPAf9U/exec";
     </script>
-  </body>
+    <p style="text-align:center; margin-top:50px;">系統跳轉中，請稍候...</p>
+</body>
 </html>
