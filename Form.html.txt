@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  </head>
+  <body class="bg-light p-4">
+    <div class="container bg-white shadow p-4 rounded" style="max-width: 500px;">
+      <h2 class="text-center text-success mb-4">📝 社團入社報名表</h2>
+      <form id="applyForm">
+        <div class="mb-3">
+          <label class="form-label">學號</label>
+          <input type="text" id="stuId" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">姓名</label>
+          <input type="text" id="name" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">選擇社團 (7選1)</label>
+          <select id="club" class="form-select">
+            <option>🎸 熱音社</option>
+            <option>💃 熱舞社</option>
+            <option>🏀 籃球社</option>
+            <option>💻 程式設計社</option>
+            <option>📸 攝影社</option>
+            <option>☕ 咖啡品評社</option>
+            <option>🏸 羽球社</option>
+          </select>
+        </div>
+        <button type="button" class="btn btn-primary w-100 mb-2" onclick="submitApply()">送出申請</button>
+        <button type="button" class="btn btn-outline-secondary w-100" onclick="goBack()">返回管理頁面</button>
+      </form>
+    </div>
+
+    <script>
+      function submitApply() {
+        const data = {
+          stuId: document.getElementById('stuId').value,
+          name: document.getElementById('name').value,
+          club: document.getElementById('club').value
+        };
+        google.script.run.withSuccessHandler(msg => {
+          alert(msg);
+          goBack();
+        }).addApplication(data);
+      }
+
+      function goBack() {
+        google.script.run.withSuccessHandler(url => window.open(url + '?page=Index', '_top')).getScriptUrl();
+      }
+    </script>
+  </body>
+</html>

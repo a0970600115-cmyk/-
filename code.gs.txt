@@ -1,0 +1,191 @@
+function doGet(e) {
+  var page = e.parameter.page || 'Index';
+  var club = e.parameter.club || ''; // 抓取網址上的社團參數
+  
+  var template = HtmlService.createTemplateFromFile(page);
+  template.clubFromUrl = club; // 把參數傳給 HTML 模板
+  
+  return template.evaluate()
+    .setTitle('社團報名系統')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+function getScriptUrl() {
+  return ScriptApp.getService().getUrl();
+}
+
+/* =========================
+   報名系統功能
+========================= */
+
+function getAllApplications() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName('工作表1');
+  if (!sheet) return [];
+  const data = sheet.getDataRange().getValues();
+  return data.length > 1 ? data.slice(1) : [];
+}
+
+function addApplication(obj) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName('工作表1');
+  if (!sheet) {
+    sheet = ss.insertSheet('工作表1');
+    sheet.appendRow(['ID', '學號', '姓名', '社團', '狀態']);
+  }
+  sheet.appendRow([
+    'STU' + new Date().getTime(),
+    obj.stuId,
+    obj.name,
+    obj.club,
+    '待處理'
+  ]);
+  return '報名成功！';
+}
+
+function updateStatus(id, status) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('工作表1');
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0] === id) {
+      sheet.getRange(i + 1, 5).setValue(status); // 將第5欄(狀態)改為 錄取 或 未錄取
+      return '狀態已更新：' + status;
+    }
+  }
+}
+
+function deleteApplication(id) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('工作表1');
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0] === id) {
+      sheet.deleteRow(i + 1);
+      return '已刪除';
+    }
+  }
+}
+
+/* =========================
+   留言板功能 (已修正穩定性)
+========================= */
+
+function addComment(data) {
+  if (!data || !data.club || !data.content) {
+    throw new Error('缺少必要參數');
+  }
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName('COMMENTS');
+
+  // 自動建立 COMMENTS 頁籤與標題
+  if (!sheet) {
+    sheet = ss.insertSheet('COMMENTS');
+    sheet.appendRow(['ID', '社團名稱', '暱稱', '留言內容', '時間', '狀態']);
+  }
+
+  // 寫入資料
+  sheet.appendRow([
+    Utilities.getUuid(),
+    data.club.toString().trim(),
+    (data.nickname || '匿名').toString().trim(),
+    data.content.toString().trim(),
+    new Date(),
+    'approved' // 預設直接核准
+  ]);
+
+  return true;
+}
+
+function listComments(club) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('COMMENTS');
+  if (!sheet) return [];
+
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return [];
+  data.shift(); // 移除標題
+
+  // 1. 取得目標社團，移除所有空格以防萬一
+  const targetClub = (club || "").toString().replace(/\s+/g, "");
+  
+  // 2. 進行過濾
+  const filtered = data.filter(r => {
+    const sheetClub = (r[1] || "").toString().replace(/\s+/g, ""); // 試算表內的社團名
+    const status = (r[5] || "").toString().trim(); 
+
+    // 比對條件：名稱必須匹配 (包含或相等) 且 狀態必須是 approved
+    const isSameClub = (sheetClub === targetClub) || 
+                       (sheetClub.indexOf(targetClub) !== -1) || 
+                       (targetClub.indexOf(sheetClub) !== -1);
+    
+    // 【關鍵修復】：這裡不能只 return true，必須 return 判斷結果
+    return isSameClub && status === 'approved';
+  });
+
+  // 3. 格式化回傳
+  return filtered.map(r => ({
+    nickname: r[2] || '匿名',
+    content: r[3] || '',
+    created_at: r[4] instanceof Date ? r[4].toISOString() : r[4]
+  })).reverse();
+}
+
+/* =========================
+   管理員留言審核
+========================= */
+
+function adminGetComments() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName('COMMENTS');
+  if (!sheet) return [];
+
+  // 取得所有資料（包含標題列）
+  const data = sheet.getDataRange().getValues();
+  
+  // 如果只有標題列或完全沒資料
+  if (data.length <= 1) {
+    return [];
+  }
+
+  // 移除標題列
+  data.shift();
+
+  // 將資料轉換為乾淨的格式傳給前端
+  return data.map(r => {
+    return [
+      r[0] || "", // ID
+      r[1] || "", // 社團名稱
+      r[2] || "", // 暱稱
+      r[3] || "", // 留言內容
+      r[4] instanceof Date ? r[4].getTime() : r[4], // 時間轉為 Timestamp
+      r[5] || ""  // 狀態
+    ];
+  });
+}
+
+function approveComment(commentId) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('COMMENTS');
+  if (!sheet) return;
+
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0] === commentId) {
+      sheet.getRange(i + 1, 6).setValue('approved');
+      return '已核准';
+    }
+  }
+}
+
+function deleteComment(commentId) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('COMMENTS');
+  if (!sheet) return;
+
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0] === commentId) {
+      sheet.deleteRow(i + 1);
+      return '已刪除';
+    }
+  }
+}

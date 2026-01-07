@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+      body { background-color: #f0f2f5; }
+      .search-container { max-width: 600px; margin: 20px auto; }
+    </style>
+  </head>
+  <body class="p-4">
+    <div class="container bg-white shadow p-4 rounded">
+      <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+        <h2 class="text-info fw-bold">📊 申請狀況個別查詢</h2>
+        <button class="btn btn-outline-secondary" onclick="navBack()">回首頁</button>
+      </div>
+
+      <div class="search-container">
+        <div class="input-group mb-3">
+          <input type="text" id="searchInput" class="form-control" placeholder="請輸入您的完整學號 (例如: A112001)">
+          <button class="btn btn-primary" onclick="searchStudent()">立即查詢</button>
+        </div>
+        <p class="text-muted small text-center">注意：請輸入完整學號以確保資料安全。</p>
+      </div>
+      
+      <table class="table table-bordered mt-4">
+        <thead class="table-info">
+          <tr>
+            <th>學號</th><th>姓名</th><th>申請社團</th><th>審核狀態</th>
+          </tr>
+        </thead>
+        <tbody id="status-body">
+          <tr><td colspan="4" class="text-center text-muted">請在上方輸入學號進行查詢</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <script>
+      let allData = []; // 用來存儲從後端抓到的所有原始資料
+
+      // 頁面加載後先抓取資料，但不顯示
+      window.onload = () => {
+        google.script.run.withSuccessHandler(data => {
+          allData = data;
+        }).getAllApplications();
+      };
+
+      function searchStudent() {
+  const query = document.getElementById('searchInput').value.trim().toUpperCase();
+  const tbody = document.getElementById('status-body');
+  
+  if (!query) {
+    alert("請輸入學號！");
+    return;
+  }
+
+  // 篩選符合學號的資料
+  const results = allData.filter(item => item[1].toString().toUpperCase() === query);
+
+  if (results.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">找不到此學號的報名記錄，請確認學號是否正確。</td></tr>';
+  } else {
+    let html = '';
+    results.forEach(item => {
+      // --- 修改重點：判斷三種狀態的顏色 ---
+      let badgeClass = 'bg-warning text-dark'; // 預設：待處理 (黃色)
+      
+      if (item[4] === '錄取') {
+        badgeClass = 'bg-success';          // 錄取：綠色
+      } else if (item[4] === '未錄取') {
+        badgeClass = 'bg-danger';           // 未錄取：紅色
+      }
+      // -------------------------------
+
+      // 姓名隱私遮蔽
+      let maskedName = item[2].charAt(0) + "*" + (item[2].length > 2 ? item[2].slice(-1) : "");
+      
+      html += `<tr>
+        <td>${item[1]}</td>
+        <td>${maskedName}</td>
+        <td>${item[3]}</td>
+        <td><span class="badge ${badgeClass}">${item[4]}</span></td>
+      </tr>`;
+    });
+    tbody.innerHTML = html;
+  }
+}
+      function navBack() {
+        google.script.run.withSuccessHandler(url => window.open(url + '?page=Index','_top')).getScriptUrl();
+      }
+    </script>
+  </body>
+</html>

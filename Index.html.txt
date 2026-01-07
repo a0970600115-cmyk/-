@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+      .card-hover:hover { transform: translateY(-5px); transition: 0.3s; cursor: pointer; border-width: 2px; }
+      body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; }
+    </style>
+  </head>
+  <body class="py-5">
+    <div class="container text-center">
+      <h1 class="display-4 fw-bold mb-5 text-dark">✨ 學生社團門戶系統</h1>
+      
+      <div class="row g-4 justify-content-center">
+        <div class="col-md-5">
+          <div class="card h-100 shadow card-hover border-primary" onclick="navTo('About')">
+            <div class="card-body p-4">
+              <div class="display-4 mb-2">🔍</div>
+              <h3 class="card-title">社團介紹</h3>
+              <p class="card-text text-muted">探索 7 大特色社團。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-5">
+          <div class="card h-100 shadow card-hover border-success" onclick="navTo('Form')">
+            <div class="card-body p-4">
+              <div class="display-4 mb-2">📝</div>
+              <h3 class="card-title">我要報名</h3>
+              <p class="card-text text-muted">填寫資訊，加入心儀社團。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-5">
+          <div class="card h-100 shadow card-hover border-info" onclick="navTo('Status')">
+            <div class="card-body p-4">
+              <div class="display-4 mb-2">📊</div>
+              <h3 class="card-title">申請狀況查詢</h3>
+              <p class="card-text text-muted">查看最新錄取名單與審核進度。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-5">
+          <div class="card h-100 shadow card-hover border-danger" onclick="navTo('Admin')">
+            <div class="card-body p-4">
+              <div class="display-4 mb-2">⚙️</div>
+              <h3 class="card-title">管理員後台</h3>
+              <p class="card-text text-muted">限幹部進入，進行名單審核。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function navTo(page) {
+  // 如果目標是 Admin 頁面，先要求密碼
+  if (page === 'Admin') {
+    const password = prompt("請輸入管理員密碼：");
+    if (password !== "sss555") {
+      alert("密碼錯誤，拒絕進入！");
+      return; // 密碼錯誤直接中斷，不進行跳轉
+    }
+  }
+
+  // 密碼正確或是進入其他頁面，才執行跳轉
+  google.script.run.withSuccessHandler(url => {
+    window.open(url + '?page=' + page, '_top');
+  }).getScriptUrl();
+}
+function approveComment(commentId) {
+  const sheet = SpreadsheetApp
+    .openById(CONFIG.SPREADSHEET_ID)
+    .getSheetByName('COMMENTS');
+
+  const rows = sheet.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][0] === commentId) {
+      sheet.getRange(i + 1, 6).setValue('approved');
+      break;
+    }
+  }
+}
+
+    </script>
+  </body>
+</html>
